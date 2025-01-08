@@ -3,12 +3,12 @@ import { View } from 'react-native'
 import CollectionFields from '@/components/CollectionFields'
 import useStore from '@/store/store';
 import SaveIcon from '@/assets/SaveIcon';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import CustomSmallButton from '@/components/CustomSmallButton';
 import DeleteIcon from '@/assets/DeleteIcon';
 import DeleteCollectionModal from './DeleteCollectionModal';
 import { ColLevel } from '@/types';
+import { deleteCollection, updateCollection } from '@/database';
 
 export default function EditCollectionModule() {
 
@@ -17,6 +17,12 @@ export default function EditCollectionModule() {
 
     React.useEffect(() => {
         if (currentCollection) {
+            console.log(currentCollection);
+            const jsonString = JSON.stringify(currentCollection);
+            console.log(jsonString);
+            
+
+            
             setCollectionName(currentCollection.name);
             setLanguages(currentCollection.languages);
             setWords(currentCollection.words);
@@ -38,26 +44,16 @@ export default function EditCollectionModule() {
             return
         }
 
-        const userCollectionsString = await AsyncStorage.getItem("WordsCollections");
-        if (!userCollectionsString) {
-            router.push('/');
-            return
-        }
-
-        const userCollections = JSON.parse(userCollectionsString);
-        for (let i = 0; i < userCollections.length; i++) {
-            if (userCollections[i].id === currentCollection.id) {
-                userCollections[i].name = collectionName;
-                userCollections[i].languages = languages;
-                userCollections[i].best_result = 0;
-                userCollections[i].words = words;
-                userCollections[i].words_count = words.split('\n').length;
-                userCollections[i].collection_level = selectedLevel;
-                break
-            }
-        }
-
-        await AsyncStorage.setItem("WordsCollections", JSON.stringify(userCollections));
+        const updatedCollection = {
+            id: currentCollection.id,
+            name: collectionName,
+            languages,
+            words,
+            words_count: words.split('\n').length,
+            best_result: 0,
+            collection_level: selectedLevel
+        };
+        await updateCollection(updatedCollection);
         router.push('/');
     }
 
@@ -66,20 +62,7 @@ export default function EditCollectionModule() {
             router.push('/');
             return
         }
-        const userCollectionsString = await AsyncStorage.getItem("WordsCollections");
-        if (!userCollectionsString) {
-            return
-        }
-
-        const userCollections = JSON.parse(userCollectionsString);
-        for (let i = 0; i < userCollections.length; i++) {
-            if (userCollections[i].id === currentCollection.id) {
-                userCollections.splice(i, 1);
-                break
-            }
-        }
-
-        await AsyncStorage.setItem("WordsCollections", JSON.stringify(userCollections));
+        await deleteCollection(currentCollection.id);
         router.push('/');
     }
 
@@ -94,6 +77,7 @@ export default function EditCollectionModule() {
                 setWords={setWords}
                 selectedLevel={selectedLevel}
                 setSelectedLevel={setSelectedLevel}
+                maxWordsLength={5000}
             />
 
             <View className='flex items-center p-3 pb-3 gap-3'>

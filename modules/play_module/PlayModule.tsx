@@ -4,6 +4,7 @@ import CustomButton from '@/components/CustomButton';
 import Result from './Result';
 import { convertor3000 } from '@/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { updateBestResult } from '@/database';
 
 interface Props {
   notPrepWords: string;
@@ -62,21 +63,10 @@ export default function PlayModule({ notPrepWords, words, id }: Props) {
 
   const editBestResult = async (id: number) => {
     if (id === -1) return;
-    const userCollectionsString = await AsyncStorage.getItem("WordsCollections");
-    if (!userCollectionsString) return;
 
-    const userCollections = JSON.parse(userCollectionsString);
-    for (let i = 0; i < userCollections.length; i++) {
-      if (userCollections[i].id === id) {
-        console.log(userCollections[i].best_result, +(words.length / (count+1) * 100).toFixed(0));
-        
-        if (userCollections[i].best_result < +(words.length / (count+1) * 100).toFixed(0)) {
-          userCollections[i].best_result = +(words.length / (count+1) * 100).toFixed(0);  
-        }
-        break
-      }
-    }
-    await AsyncStorage.setItem("WordsCollections", JSON.stringify(userCollections));
+    const newBestResult = +(words.length / (count + 1) * 100).toFixed(0);
+
+    await updateBestResult(id, newBestResult);
   };
 
 

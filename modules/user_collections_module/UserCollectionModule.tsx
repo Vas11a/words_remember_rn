@@ -2,10 +2,10 @@ import React, { useEffect } from 'react'
 import { View, TextInput, TouchableWithoutFeedback, ScrollView, Text } from 'react-native'
 import FindIcon from '@/assets/FindIcon'
 import AddNewColButtonn from './AddNewColButtonn';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ICollection } from '@/types';
 import Collection from './Collection';
 import ArrowIcon from '@/assets/ArrowIcon';
+import { getCollections, setupDatabase } from '@/database';
 
 export default function UserCollectionModule() {
 
@@ -13,26 +13,30 @@ export default function UserCollectionModule() {
 
     const [isFocused, setIsFocused] = React.useState(false);
     const [userCollections, setUserCollections] = React.useState<ICollection[]>([]);
+    const [inputValue, setInputValue] = React.useState('');
+
+    const getUserColleactions = async () => {
+        const collections = await getCollections();
+        if (collections?.length === 0) {
+            console.warn('Коллекции отсутствуют или еще не созданы.');
+        }
+        return collections;
+    };
+
+    const innitialSetupDbAndCollections = async () => {
+        await setupDatabase();
+        const collections = await getUserColleactions();
+        setUserCollections(collections as ICollection[]);
+    };
+    
 
     useEffect(() => {
-        getUserCollections();
+        innitialSetupDbAndCollections();
     }, []);
 
     const handleContainerPress = () => {
         inputRef.current?.focus();
     };
-
-    const getUserCollections = async () => {
-        try {
-            const savedCollections = await AsyncStorage.getItem("WordsCollections");
-            if (savedCollections) {
-                setUserCollections(JSON.parse(savedCollections));
-            }
-        } catch (error) {
-            console.error("Error loading cards:", error);
-        }
-    }
-
 
     return (
         <View className='flex-1 flex p-b-3 pt-5 pb-5 gap-5 relative'>
@@ -44,6 +48,8 @@ export default function UserCollectionModule() {
                         <FindIcon color='black' width={22} height={22} />
                         <TextInput
                             ref={inputRef}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.nativeEvent.text)}
                             placeholder='Search collection...'
                             className=' flex-1 text-lg'
                             onFocus={() => setIsFocused(true)}
@@ -54,9 +60,11 @@ export default function UserCollectionModule() {
                 <ScrollView className=' py-4 px-3 h-5' contentContainerStyle={{ flexGrow: 1 }}>
                     {
                         userCollections.map((collection, idx) => {
-                            return (
-                                <Collection key={idx} collectionData={collection} />
-                            )
+                            if (collection.name.toLowerCase().includes(inputValue.toLowerCase())) {
+                                return (
+                                    <Collection key={idx} collectionData={collection} />
+                                )    
+                            }
                         })
                     }
                     {

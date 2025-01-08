@@ -5,6 +5,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 
 
 export default function RootLayout() {
+    
+
     return (
         <KeyboardAwareScrollView
             style={{ flex: 1 }}

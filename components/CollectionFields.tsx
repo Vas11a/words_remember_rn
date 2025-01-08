@@ -12,9 +12,33 @@ interface Props {
     setWords: React.Dispatch<React.SetStateAction<string>>;
     selectedLevel: string,
     setSelectedLevel: React.Dispatch<React.SetStateAction<ColLevel>>
+    maxWordsLength: number
 }
 
-export default function CollectionFields({collectionName, setCollectionName, languages, setLanguages, words, setWords, selectedLevel, setSelectedLevel}: Props) {
+export default function CollectionFields(
+    {
+        collectionName,
+        setCollectionName, 
+        languages, 
+        setLanguages, 
+        words, 
+        setWords, 
+        selectedLevel, 
+        setSelectedLevel,
+        maxWordsLength
+    }: Props) {
+    
+    const [isMaxWordsLength, setIsMaxWordsLength] = React.useState(false);
+
+    const handleChangeWords = (text: string) => { 
+        if (text.length <= maxWordsLength) {
+            setIsMaxWordsLength(false);
+            setWords(text)
+        } else {
+            setIsMaxWordsLength(true);
+        }
+    }
+
     return (
         <View className='flex-1 p-3 pt-5 flex flex-col gap-6'>
             <View className='flex flex-col gap-1'>
@@ -44,8 +68,9 @@ export default function CollectionFields({collectionName, setCollectionName, lan
                     className='border border-gray-500 text-xl rounded-md p-2 h-32'
                     multiline={true}
                     value={words}
-                    onChangeText={setWords}
+                    onChangeText={(text) => handleChangeWords(text)}
                 />
+                <Text className={isMaxWordsLength ? 'text-red-500' : ''}>{words.length}/{maxWordsLength}</Text>
             </View>
             <View className=' flex flex-col gap-1' >
                 <Text className='text-xl font-semibold' >Select level</Text>

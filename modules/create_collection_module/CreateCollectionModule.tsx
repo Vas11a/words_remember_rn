@@ -1,11 +1,11 @@
 import React from 'react'
 import { View } from 'react-native'
 import SaveIcon from '@/assets/SaveIcon'
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ColLevel, ICollection } from '@/types'
 import { useRouter } from 'expo-router'
 import CollectionFields from '@/components/CollectionFields';
 import CustomSmallButton from '@/components/CustomSmallButton';
+import { addCollection } from '@/database';
 
 export default function CreateCollectionModule() {
 
@@ -13,6 +13,7 @@ export default function CreateCollectionModule() {
     const [languages, setLanguages] = React.useState('');
     const [words, setWords] = React.useState('');
     const [selectedLevel, setSelectedLevel] = React.useState<ColLevel>("no_level");
+    const maxWordsLength = 1000;
 
     const router = useRouter();
 
@@ -26,15 +27,7 @@ export default function CreateCollectionModule() {
             best_result: 0,
             collection_level: selectedLevel
         }
-
-        const savedCollections = await AsyncStorage.getItem("WordsCollections");
-        if (savedCollections) {
-            const parsedCollections = JSON.parse(savedCollections);
-            parsedCollections.push(readyData);
-            await AsyncStorage.setItem("WordsCollections", JSON.stringify(parsedCollections));
-        } else {
-            await AsyncStorage.setItem("WordsCollections", JSON.stringify([readyData]));
-        }
+        await addCollection(readyData);
 
         router.push('/');
         
@@ -51,6 +44,7 @@ export default function CreateCollectionModule() {
                 setWords={setWords} 
                 selectedLevel={selectedLevel}
                 setSelectedLevel={setSelectedLevel}
+                maxWordsLength={5000}
             />
 
 
